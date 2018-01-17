@@ -16,15 +16,13 @@ module.exports = function (rows_, opts) {
     
     var rows = map(rows_, function (row) {
         return map(row, function (c_, ix) {
-            var c = String(c_);
+            var c = String(c_)
             if (align[ix] === '.') {
                 var index = dotindex(c);
-                var size = dotsizes[ix] + (/\./.test(c) ? 1 : 2)
-                    - (stringLength(c) - index)
-                ;
-                return c + Array(size).join(' ');
+                var pre = Array(dotsizes[ix] - index + 1).join(' ')
+                return pre + c;
             }
-            else return c;
+            return c;
         });
     });
     
@@ -36,12 +34,18 @@ module.exports = function (rows_, opts) {
         return acc;
     }, []);
     
-    return map(rows, function (row) {
+    rows = map(rows, function (row) {
         return map(row, function (c, ix) {
             var n = (sizes[ix] - stringLength(c)) || 0;
             var s = Array(Math.max(n + 1, 1)).join(' ');
-            if (align[ix] === 'r' || align[ix] === '.') {
+            if (align[ix] === 'r') {
                 return s + c;
+            }
+            if (align[ix] === '.') {
+                var index = dotindex(c);
+                var pre = Array(dotsizes[ix] - index + 1).join(' ')
+                var post = Array(sizes[ix] - stringLength(c) - pre.length + 1).join(' ')
+                return pre + c + post;
             }
             if (align[ix] === 'c') {
                 return Array(Math.ceil(n / 2 + 1)).join(' ')
@@ -51,12 +55,14 @@ module.exports = function (rows_, opts) {
             
             return c + s;
         }).join(hsep).replace(/\s+$/, '');
-    }).join('\n');
+    })
+
+    return rows.join('\n');
 };
 
 function dotindex (c) {
-    var m = /\.[^.]*$/.exec(c);
-    return m ? m.index + 1 : c.length;
+    var i = c.indexOf('.')
+    return (i >= 0 ? i : c.length) + 1
 }
 
 function reduce (xs, f, init) {
